@@ -43,19 +43,31 @@ end
 function main()
     local midiEditor = reaper.MIDIEditor_GetActive()
     if not midiEditor then return end
-
+    
     reaper.Undo_BeginBlock()
     -- get list of all cc lanes with events
     take = reaper.MIDIEditor_EnumTakes(midiEditor, 0, false)
+ 
     cc_lanes_with_event = get_all_cc_lanes_with_events(take)
+    
+    -- a bit of logging if needed
+    -- for idx, value in ipairs(cc_lanes_with_event) do
+    --     reaper.ShowConsoleMsg(value .. "\n")
+    -- end
+    
     -- if no cc lane with events just return
     if #cc_lanes_with_event == 0 then return end
      -- get last clicked cc lane
     last_clicked_cc_lane = reaper.MIDIEditor_GetSetting_int(midiEditor, 'last_clicked_cc_lane')
     if not last_clicked_cc_lane then last_clicked_cc_lane = 0 end
+    -- handle special cc 32 case (see below)
+    if last_clicked_cc_lane == 516 then last_clicked_cc_lane = 32 end
     -- compute next cc lane to be displayed
     next_cc_lane = find_first_greater_element(cc_lanes_with_event, last_clicked_cc_lane)
-    -- computer corresponding reaper command
+    
+    -- reaper.ShowConsoleMsg("Last cc: " .. last_clicked_cc_lane .. "\n")
+    -- reaper.ShowConsoleMsg("Next cc: " .. next_cc_lane .. "\n")
+    -- compute corresponding reaper command
     -- general cas
     if next_cc_lane ~= 32 then
       command_id = 40238 + next_cc_lane
